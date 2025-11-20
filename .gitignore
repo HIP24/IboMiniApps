@@ -34,3 +34,6 @@ Cargo.lock
 # Local data
 *.sqlite
 *.sqlite-journal
+
+# Javascript files
+*.js

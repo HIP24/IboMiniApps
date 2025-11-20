@@ -352,7 +352,7 @@ const YoutubeDownloader = () => {
 export const YoutubeApp = {
   id: 'youtube-downloader',
   name: 'YouTube Downloader',
-  description: 'Download videos or audio from YouTube',
+  description: 'Download media from YouTube',
   icon: '🎬',
   component: YoutubeDownloader,
   tags: ['video', 'youtube', 'downloader', 'converter'],

@@ -22,7 +22,7 @@ function App() {
       <aside className="sidebar">
         <header className="sidebar__header">
           <h1>IboMiniApps</h1>
-          <p>Launch lightweight utilities in one unified workspace.</p>
+          <p>All useful utilities in one space.</p>
         </header>
 
         <nav className="miniapp-list" aria-label="Mini app selector">
