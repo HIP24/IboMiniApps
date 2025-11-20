@@ -23,8 +23,14 @@ jobs:
           node-version: 20
           cache: npm
 
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - run: pip install yt-dlp
       - run: npm ci
       - run: npm run build        # creates your ./dist folder (same as tauri dev)
+      - run: cp server.js dist/   # copy backend server to dist
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
