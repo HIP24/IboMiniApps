@@ -1,0 +1,36 @@
+# Node & Vite artifacts
+node_modules/
+dist/
+.vite/
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Tauri build output
+src-tauri/target/
+src-tauri/gen/
+src-tauri/bin/
+
+# Rust build cache
+Cargo.lock
+.cargo/
+
+# Environment & tooling
+.env
+.env.*
+.turbo/
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Local data
+*.sqlite
+*.sqlite-journal

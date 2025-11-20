@@ -1,0 +1,19 @@
+[package]
+name = "ibo-miniapps"
+version = "0.1.0"
+edition = "2021"
+description = "IboMiniApps desktop shell"
+license = ""
+authors = ["IboApps"]
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "1", features = ["wry"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
