@@ -3,10 +3,16 @@ import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/IboMiniApps/',
+  base: '/',
   plugins: [react()],
   server: {
     port: 5173,
-    strictPort: true
+    strictPort: true,
+    proxy: {
+      '/translate': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      }
+    }
   }
 });

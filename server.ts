@@ -4,6 +4,9 @@ import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -167,7 +170,7 @@ app.get('/proxy-download', async (req, res) => {
   }
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url as string);
     if (!response.ok) {
       return res.status(response.status).json({ error: 'Failed to fetch file' });
     }
@@ -178,7 +181,7 @@ app.get('/proxy-download', async (req, res) => {
     const buffer = await response.arrayBuffer();
     res.send(Buffer.from(buffer));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: (error as Error).message });
   }
 });
 
@@ -220,8 +223,8 @@ app.post('/translate', async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error('Translate endpoint error:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error('Translate endpoint error:', (error as Error).message);
+    res.status(500).json({ error: (error as Error).message });
   }
 });
 
@@ -336,7 +339,7 @@ finally:
   
   const python = spawn('python', [tempFile]);
   
-  let progressInterval;
+  let progressInterval: NodeJS.Timeout;
   
   python.stdout.on('data', (data) => {
     const text = data.toString();

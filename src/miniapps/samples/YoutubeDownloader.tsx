@@ -7,19 +7,19 @@ const YoutubeDownloader = () => {
   const [formats, setFormats] = useState<any[]>([]);
   const [selectedQuality, setSelectedQuality] = useState('');
   const [videoInfo, setVideoInfo] = useState<any>(null);
-  const [progress, setProgress] = useState(0);
-  const [downloadedFile, setDownloadedFile] = useState('');
-  const [currentDownloadId, setCurrentDownloadId] = useState<string | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadLink, setDownloadLink] = useState('');
+  const [downloadFilename, setDownloadFilename] = useState('');
 
   const getFormats = async () => {
     if (!url) return;
     
     setIsLoading(true);
     setMessage('Getting available formats...');
+    setDownloadLink('');
     
     try {
-      const response = await fetch('http://localhost:3001/formats', {
+      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001/formats' : '/formats';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
@@ -40,158 +40,37 @@ const YoutubeDownloader = () => {
     }
   };
 
-  const downloadVideo = async () => {
+  const generateDownloadLink = async (downloadAudio: boolean) => {
     setIsLoading(true);
-    setIsDownloading(true);
-    setProgress(0);
-    setMessage('Starting video download...');
-    setDownloadedFile('');
-    const downloadId = Date.now().toString();
-    setCurrentDownloadId(downloadId);
-
-    // Request notification permission and show start notification
-    if ('Notification' in window) {
-      if (Notification.permission === 'default') {
-        await Notification.requestPermission();
-      }
-      if (Notification.permission === 'granted') {
-        new Notification('🎬 Download Started', {
-          body: `Video download started: ${videoInfo?.title || 'YouTube Video'}`,
-          tag: 'youtube-download',
-          requireInteraction: false
-        });
-      }
-    }
-
+    setMessage('Generating download link...');
+    setDownloadLink('');
+    
     try {
-      // Start download request
-      const downloadPromise = fetch('http://localhost:3001/download', {
+      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001/download-link' : '/download-link';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url,
-          downloadAudio: false,
-          downloadVideo: true,
+          downloadAudio,
           quality: selectedQuality,
-          downloadId,
         }),
       });
-
-      // Start progress tracking
-      const progressInterval = setInterval(async () => {
-        try {
-          const progressResponse = await fetch(`http://localhost:3001/progress/${downloadId}`);
-          const progressData = await progressResponse.json();
-          if (progressData.progress !== undefined && progressData.progress >= 0) {
-            setProgress(progressData.progress);
-          }
-        } catch (e) {
-          // Continue with current progress
-        }
-      }, 500);
-
-      const response = await downloadPromise;
-      clearInterval(progressInterval);
       
       const data = await response.json();
-      if (response.ok) {
-        setMessage('Video downloaded to Downloads folder!');
-        setDownloadedFile('video');
-        
-        // Show completion notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('✅ Download Complete!', {
-            body: `Video saved to Downloads folder: ${videoInfo?.title || 'YouTube Video'}`,
-            tag: 'youtube-complete',
-            requireInteraction: true
-          });
-        }
+      if (response.ok && data.url) {
+        const filename = `${data.title}.${data.ext}`;
+        const proxyUrl = `${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : ''}/proxy-download?url=${encodeURIComponent(data.url)}&filename=${encodeURIComponent(filename)}`;
+        setDownloadLink(proxyUrl);
+        setDownloadFilename(filename);
+        setMessage('');
       } else {
-        setMessage(`Error: ${data.error || 'Failed to download'}`);
+        setMessage(`Error: ${data.error || 'Failed to generate link'}`);
       }
     } catch (error) {
       setMessage('Failed to connect to server');
     } finally {
-      setCurrentDownloadId(null);
       setIsLoading(false);
-      setIsDownloading(false);
-    }
-  };
-
-  const downloadAudio = async () => {
-    setIsLoading(true);
-    setIsDownloading(true);
-    setProgress(0);
-    setMessage('Starting audio download...');
-    setDownloadedFile('');
-    const downloadId = Date.now().toString();
-    setCurrentDownloadId(downloadId);
-
-    // Request notification permission and show start notification
-    if ('Notification' in window) {
-      if (Notification.permission === 'default') {
-        await Notification.requestPermission();
-      }
-      if (Notification.permission === 'granted') {
-        new Notification('🎵 Download Started', {
-          body: `Audio download started: ${videoInfo?.title || 'YouTube Audio'}`,
-          tag: 'youtube-download',
-          requireInteraction: false
-        });
-      }
-    }
-
-    try {
-      // Start download request
-      const downloadPromise = fetch('http://localhost:3001/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url,
-          downloadAudio: true,
-          downloadVideo: false,
-          downloadId,
-        }),
-      });
-
-      // Start progress tracking
-      const progressInterval = setInterval(async () => {
-        try {
-          const progressResponse = await fetch(`http://localhost:3001/progress/${downloadId}`);
-          const progressData = await progressResponse.json();
-          if (progressData.progress !== undefined && progressData.progress >= 0) {
-            setProgress(progressData.progress);
-          }
-        } catch (e) {
-          // Continue with current progress
-        }
-      }, 500);
-
-      const response = await downloadPromise;
-      clearInterval(progressInterval);
-      
-      const data = await response.json();
-      if (response.ok) {
-        setMessage('Audio downloaded to Downloads folder!');
-        setDownloadedFile('audio');
-        
-        // Show completion notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('✅ Download Complete!', {
-            body: `Audio saved to Downloads folder: ${videoInfo?.title || 'YouTube Audio'}`,
-            tag: 'youtube-complete',
-            requireInteraction: true
-          });
-        }
-      } else {
-        setMessage(`Error: ${data.error || 'Failed to download'}`);
-      }
-    } catch (error) {
-      setMessage('Failed to connect to server');
-    } finally {
-      setCurrentDownloadId(null);
-      setIsLoading(false);
-      setIsDownloading(false);
     }
   };
 
@@ -282,7 +161,7 @@ const YoutubeDownloader = () => {
       {formats.length > 0 && (
         <div style={{ margin: '20px 0' }}>
           <button
-            onClick={downloadVideo}
+            onClick={() => generateDownloadLink(false)}
             disabled={isLoading}
             style={{
               padding: '12px 24px',
@@ -294,11 +173,11 @@ const YoutubeDownloader = () => {
               cursor: isLoading ? 'not-allowed' : 'pointer'
             }}
           >
-            Download Video (with Audio)
+            Get Video Link
           </button>
           
           <button
-            onClick={downloadAudio}
+            onClick={() => generateDownloadLink(true)}
             disabled={isLoading}
             style={{
               padding: '12px 24px',
@@ -310,27 +189,37 @@ const YoutubeDownloader = () => {
               cursor: isLoading ? 'not-allowed' : 'pointer'
             }}
           >
-            Download Audio Only
+            Get Audio Link
           </button>
         </div>
       )}
 
-      {isDownloading && (
-        <div style={{ margin: '15px 0' }}>
-          <div style={{ marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
-            Progress: {Math.round(progress)}%
-          </div>
-          <div style={{ backgroundColor: '#e9ecef', borderRadius: '4px', height: '20px', overflow: 'hidden' }}>
-            <div
-              style={{
-                backgroundColor: '#28a745',
-                height: '100%',
-                width: `${Math.max(0, Math.min(100, progress))}%`,
-                transition: 'width 0.3s ease',
-                borderRadius: '4px'
-              }}
-            />
-          </div>
+      {downloadLink && (
+        <div style={{ 
+          marginTop: '20px', 
+          padding: '15px',
+          borderRadius: '4px',
+          backgroundColor: '#d4edda',
+          color: '#155724'
+        }}>
+          <p><strong>Download Link Generated!</strong></p>
+          <a 
+            href={downloadLink}
+            style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '4px',
+              marginTop: '10px'
+            }}
+          >
+            📥 Download Now
+          </a>
+          <p style={{ fontSize: '12px', marginTop: '10px' }}>
+            Link expires after a few minutes. Download will start automatically.
+          </p>
         </div>
       )}
 

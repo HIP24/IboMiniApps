@@ -35,34 +35,29 @@ function SyrianAI() {
 
   const callOpenRouter = async (systemPrompt: string, userMessage: string): Promise<string> => {
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const url = '/translate';
+      console.log('Fetching from:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'x-ai/grok-4.1-fast:free',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ]
+          systemPrompt,
+          userMessage
         })
       });
 
       if (!response.ok) {
-        throw new Error('API request failed');
+        console.error('Response not ok:', response.status, response.statusText);
+        throw new Error(`API request failed: ${response.status}`);
       }
 
       const data = await response.json();
       return data.choices[0]?.message?.content || 'Sorry, could not process your request.';
     } catch (error) {
+      console.error('Error calling OpenRouter:', error);
       return "Sorry, couldn't connect to server. Please try again.";
     }
   };
@@ -305,7 +300,7 @@ function SyrianAI() {
 
 const syrianAIDefinition: MiniAppDefinition = {
   id: "syrian-ai",
-  name: "Syrian AI",
+  name: "Syrian Habibi",
   description: "AI assistant for Syrian translation",
   icon: "🤖",
   component: SyrianAI
